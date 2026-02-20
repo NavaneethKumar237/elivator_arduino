@@ -1,3 +1,37 @@
+
+# pinout 
+
+- Arduino UNO
+
+| Component     | Arduino Pin |
+| ------------- | ----------- |
+| STEP          | D2          |
+| DIR           | D5          |
+| ENABLE        | D8          |
+| Button G      | D9          |
+| Button 1      | D10         |
+| Button 2      | D11         |
+| Buzzer        | D6          |
+| Servo Signal  | D7          |
+| IR Sensor OUT | D12         |
+| OLED SDA      | A4          |
+| OLED SCL      | A5          |
+
+- Stepper Driver Wiring
+  
+| Driver Pin | Connect To  |
+| ---------- | ----------- |
+| STEP       | D2          |
+| DIR        | D5          |
+| EN         | D8          |
+| GND        | Arduino GND |
+| VDD        | Arduino 5V  |
+
+
+
+
+
+
 # test code 
 ```
 #include <Wire.h>
