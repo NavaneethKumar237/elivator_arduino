@@ -2,6 +2,7 @@
 # pinout 
 
 - Arduino UNO
+  
 
 | Component     | Arduino Pin |
 | ------------- | ----------- |
@@ -693,3 +694,228 @@ void updateDisplay(char arrow, int floor) {
 }
 
 ```
+✅ 3 Floors (G,1,2) – Real Step Control
+✅ Queue Priority System
+✅ Servo Auto Door
+✅ IR Safety (3 sec wait logic)
+✅ OLED Floor + Arrow
+✅ Buzzer Music
+✅ 5 LED Addressable Strip Status
+✅ Auto Open if same floor button pressed
+
+# updated lights 
+
+- led at D10
+
+  Install Libraries
+
+Adafruit SSD1306
+
+Adafruit GFX
+
+Adafruit NeoPixel
+
+Servo
+
+```
+**#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Servo.h>
+#include <Adafruit_NeoPixel.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// ===== PINS =====
+#define STEP_PIN 2
+#define DIR_PIN 3
+
+#define BTN_G 4
+#define BTN_1 5
+#define BTN_2 6
+
+#define SERVO_PIN 7
+#define BUZZER 8
+#define IR_SENSOR 9
+
+#define LED_PIN 10
+#define LED_COUNT 5
+
+// ===== OBJECTS =====
+Servo door;
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+// ===== FLOOR SETTINGS =====
+long stepsPerFloor = 2000;  // Adjust if needed
+int currentFloor = 0;
+long currentPosition = 0;
+
+int queue[5];
+int queueSize = 0;
+
+// ================= LED =================
+void setColor(int r,int g,int b){
+  for(int i=0;i<LED_COUNT;i++)
+    strip.setPixelColor(i,strip.Color(r,g,b));
+  strip.show();
+}
+
+void flashRed(){
+  setColor(255,0,0);
+  delay(200);
+  strip.clear();
+  strip.show();
+  delay(200);
+}
+
+// ================= OLED =================
+void showFloor(int floor, String dir){
+  display.clearDisplay();
+  display.setTextSize(3);
+  display.setCursor(30,10);
+  display.print("F:");
+  display.print(floor);
+  display.setTextSize(2);
+  display.setCursor(45,45);
+  display.print(dir);
+  display.display();
+}
+
+// ================= BUZZER =================
+void arrivalTone(){
+  tone(BUZZER, 1000, 200);
+  delay(200);
+  tone(BUZZER, 1500, 200);
+  delay(200);
+  noTone(BUZZER);
+}
+
+// ================= QUEUE =================
+void addToQueue(int floor){
+  if(queueSize<5){
+    queue[queueSize++] = floor;
+  }
+}
+
+// ================= DOOR =================
+void openDoor(){
+  door.write(90);
+  setColor(0,255,0);
+  delay(3000);
+}
+
+void closeDoor(){
+  unsigned long waitTime = millis();
+  while(millis()-waitTime < 3000){
+    if(digitalRead(IR_SENSOR)==LOW){
+      waitTime = millis(); // reset timer
+    }
+  }
+
+  for(int i=0;i<5;i++) flashRed();
+  door.write(0);
+}
+
+// ================= MOTOR =================
+void moveToFloor(int target){
+  long targetPos = target * stepsPerFloor;
+  long steps = targetPos - currentPosition;
+
+  if(steps>0){
+    digitalWrite(DIR_PIN,HIGH);
+    showFloor(currentFloor,"UP");
+    setColor(0,0,255);
+  }else{
+    digitalWrite(DIR_PIN,LOW);
+    showFloor(currentFloor,"DOWN");
+    setColor(150,0,150);
+  }
+
+  steps = abs(steps);
+
+  for(long i=0;i<steps;i++){
+    digitalWrite(STEP_PIN,HIGH);
+    delayMicroseconds(800);
+    digitalWrite(STEP_PIN,LOW);
+    delayMicroseconds(800);
+  }
+
+  currentPosition = targetPos;
+  currentFloor = target;
+
+  arrivalTone();
+  showFloor(currentFloor,"STOP");
+  openDoor();
+  closeDoor();
+}
+
+// ================= SETUP =================
+void setup(){
+
+  pinMode(STEP_PIN,OUTPUT);
+  pinMode(DIR_PIN,OUTPUT);
+
+  pinMode(BTN_G,INPUT_PULLUP);
+  pinMode(BTN_1,INPUT_PULLUP);
+  pinMode(BTN_2,INPUT_PULLUP);
+
+  pinMode(IR_SENSOR,INPUT);
+  pinMode(BUZZER,OUTPUT);
+
+  door.attach(SERVO_PIN);
+  door.write(0);
+
+  strip.begin();
+  strip.show();
+
+  display.begin(SSD1306_SWITCHCAPVCC,0x3C);
+  display.clearDisplay();
+  display.display();
+
+  showFloor(0,"READY");
+}
+
+// ================= LOOP =================
+void loop(){
+
+  if(digitalRead(BTN_G)==LOW){
+    if(currentFloor==0){
+      openDoor();
+    }else{
+      addToQueue(0);
+    }
+    delay(300);
+  }
+
+  if(digitalRead(BTN_1)==LOW){
+    if(currentFloor==1){
+      openDoor();
+    }else{
+      addToQueue(1);
+    }
+    delay(300);
+  }
+
+  if(digitalRead(BTN_2)==LOW){
+    if(currentFloor==2){
+      openDoor();
+    }else{
+      addToQueue(2);
+    }
+    delay(300);
+  }
+
+  if(queueSize>0){
+    int nextFloor = queue[0];
+
+    for(int i=0;i<queueSize-1;i++)
+      queue[i]=queue[i+1];
+
+    queueSize--;
+
+    moveToFloor(nextFloor);
+  }
+}
+```**
