@@ -189,7 +189,7 @@ void updateDisplay(char arrow, int floor) {
 
   display.display();
 }
-``
+```
 
 
 # v1 test
