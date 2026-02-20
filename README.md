@@ -695,19 +695,26 @@ void updateDisplay(char arrow, int floor) {
 
 ```
 ✅ 3 Floors (G,1,2) – Real Step Control
+
 ✅ Queue Priority System
+
 ✅ Servo Auto Door
+
 ✅ IR Safety (3 sec wait logic)
+
 ✅ OLED Floor + Arrow
+
 ✅ Buzzer Music
+
 ✅ 5 LED Addressable Strip Status
+
 ✅ Auto Open if same floor button pressed
 
 # updated lights 
 
 - led at D10
 
-  Install Libraries
+Install Libraries
 
 Adafruit SSD1306
 
@@ -718,7 +725,7 @@ Adafruit NeoPixel
 Servo
 
 ```
-**#include <Wire.h>
+#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Servo.h>
@@ -918,4 +925,4 @@ void loop(){
     moveToFloor(nextFloor);
   }
 }
-```**
+```
